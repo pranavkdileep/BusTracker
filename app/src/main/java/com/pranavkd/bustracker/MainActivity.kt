@@ -73,6 +73,7 @@ fun MainScreen() {
     var showBottomSheet by remember { mutableStateOf(true) }
     val context = LocalContext.current
     var locat by remember { mutableStateOf(LatLng(10.517147, 76.212787)) }
+    var rotation by remember { mutableStateOf(0f) }
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition(locat,15f,45f,0f)
     }
@@ -87,7 +88,12 @@ fun MainScreen() {
             .fillMaxSize()
             .padding(WindowInsets.statusBars.only(WindowInsetsSides.Top).asPaddingValues())
     ) {
-        MapLayoutBox(locat, cameraPositionState, routeCoordinates)
+        MapLayoutBox(
+            locat = locat,
+            rotation = rotation,
+            cameraPositionState = cameraPositionState,
+            routeCoordinates = routeCoordinates
+        )
         StatusIndicator(onClick = {
             showBottomSheet = !showBottomSheet
         })
@@ -192,6 +198,7 @@ fun BottomSheet(showBottomSheet: Boolean, onDismiss: () -> Unit, onApplly: (text
 @Composable
 fun MapLayoutBox(
     locat: LatLng,
+    rotation: Float = 0f,
     cameraPositionState: CameraPositionState,
     routeCoordinates: List<LatLng>
 ) {
@@ -214,6 +221,7 @@ fun MapLayoutBox(
         ){
             MarkerComposable(
                 state = MarkerState(position = locat),
+                rotation = rotation
             ) {
                 Image(
                     modifier = Modifier
