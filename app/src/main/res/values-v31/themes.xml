@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.BusTracker" parent="android:Theme.Material.Light.NoActionBar"/>
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/Light</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/bus_svgrepo_com</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="postSplashScreenTheme">@style/Theme.BusTracker</item>
+    </style>
+</resources>

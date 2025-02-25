@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="band">#59e881</color>
+    <color name="dark">#433e5a</color>
+    <color name="Darkest">#262335</color>
+    <color name="Light">#dddae8</color>
+    <color name="Lightest">#FFFFFF</color>
+    <color name="Mid">#6d59c0</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

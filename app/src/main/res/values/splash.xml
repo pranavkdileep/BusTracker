@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash Screen Theme -->
+    <style name="Theme.App.Splash" parent="Theme.SplashScreen">
+        <!-- Customize the background color -->
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <!-- Set the splash screen icon (must be a vector drawable) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/bus_svgrepo_com</item>
+        <!-- Animation duration in milliseconds -->
+        <item name="windowSplashScreenAnimationDuration">300</item>
+        <!-- Theme to switch to after splash screen -->
+        <item name="postSplashScreenTheme">@style/Theme.BusTracker</item>
+    </style>
+
+    <!-- Your app's main theme -->
+    <style name="Theme.YourApp" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Customize your app's theme as needed -->
+    </style>
+</resources>
