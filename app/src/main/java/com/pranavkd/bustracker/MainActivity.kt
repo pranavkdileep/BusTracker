@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,7 +72,7 @@ fun MainScreen() {
     val context = LocalContext.current
     var locat by remember { mutableStateOf(LatLng(10.517147, 76.212787)) }
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(locat, 15f)
+        position = CameraPosition(locat,15f,45f,0f)
     }
     val routeCoordinates by remember {
         mutableStateOf(listOf(
@@ -91,7 +92,9 @@ fun MainScreen() {
         BottomSheet(showBottomSheet = showBottomSheet, onDismiss = { showBottomSheet = false }, onApplly = { s: String, s1: String ->
             var lat = s.split(",")
             locat = LatLng(lat[0].toDouble(),lat[1].toDouble())
-            Toast.makeText(context, "Location Updated", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Location Updated Now generating Routes", Toast.LENGTH_SHORT).show()
+            // var newroutes list of <LatLng>
+
 
         })
     }
@@ -171,7 +174,7 @@ fun BottomSheet(showBottomSheet: Boolean, onDismiss: () -> Unit, onApplly: (text
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text("Apply")
+                Text("Apply Config")
             }
         }
     }
@@ -183,6 +186,7 @@ fun MapLayoutBox(
     cameraPositionState: CameraPositionState,
     routeCoordinates: List<LatLng>
 ) {
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -191,7 +195,8 @@ fun MapLayoutBox(
     ) {
 
         GoogleMap(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize()
+                .padding(bottom = 8.dp),
             cameraPositionState = cameraPositionState
         ){
             MarkerComposable(
@@ -202,7 +207,7 @@ fun MapLayoutBox(
                         .align(Alignment.Center)
                         .width(50.dp)
                         .height(50.dp),
-                    painter = painterResource(id = R.drawable.bus_station),
+                    painter = painterResource(id = R.drawable.marker_dafault),
                     contentDescription = "",
                 )
             }

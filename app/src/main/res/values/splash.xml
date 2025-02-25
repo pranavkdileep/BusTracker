@@ -5,7 +5,7 @@
         <!-- Customize the background color -->
         <item name="windowSplashScreenBackground">@color/white</item>
         <!-- Set the splash screen icon (must be a vector drawable) -->
-        <item name="windowSplashScreenAnimatedIcon">@drawable/bus_svgrepo_com</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/splash_icon</item>
         <!-- Animation duration in milliseconds -->
         <item name="windowSplashScreenAnimationDuration">300</item>
         <!-- Theme to switch to after splash screen -->
