@@ -112,7 +112,7 @@ fun StatusIndicator(onClick:()->Unit) {
             onClick = {onClick()}
         ) {
             Text(
-                text = "Status : Server Working Fine",
+                text = "Click to open bottom sheet",
                 modifier = Modifier.padding(16.dp)
             )
 
