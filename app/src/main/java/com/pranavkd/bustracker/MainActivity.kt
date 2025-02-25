@@ -44,8 +44,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
@@ -74,7 +76,7 @@ fun MainScreen() {
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition(locat,15f,45f,0f)
     }
-    val routeCoordinates by remember {
+    var routeCoordinates by remember {
         mutableStateOf(listOf(
             LatLng(10.512503, 76.220678),
             LatLng(9.901145, 76.712371),
@@ -94,7 +96,14 @@ fun MainScreen() {
             locat = LatLng(lat[0].toDouble(),lat[1].toDouble())
             Toast.makeText(context, "Location Updated Now generating Routes", Toast.LENGTH_SHORT).show()
             // var newroutes list of <LatLng>
-
+            var newRoutes : List<LatLng> = listOf()
+            // s1 format "{lat1,lon1},{lat2,lon2},..."
+            var routes = s1.split("},{")
+            for (route in routes){
+                var latlon = route.replace("{","").replace("}","").split(",")
+                newRoutes += LatLng(latlon[0].toDouble(),latlon[1].toDouble())
+            }
+            routeCoordinates = newRoutes
 
         })
     }
@@ -186,7 +195,10 @@ fun MapLayoutBox(
     cameraPositionState: CameraPositionState,
     routeCoordinates: List<LatLng>
 ) {
-
+    val context = LocalContext.current
+    val mapStyleOptions = remember {
+        MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style)
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -197,7 +209,8 @@ fun MapLayoutBox(
         GoogleMap(
             modifier = Modifier.fillMaxSize()
                 .padding(bottom = 8.dp),
-            cameraPositionState = cameraPositionState
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(mapStyleOptions = mapStyleOptions)
         ){
             MarkerComposable(
                 state = MarkerState(position = locat),

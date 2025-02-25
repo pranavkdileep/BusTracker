@@ -15,5 +15,6 @@
     <!-- Your app's main theme -->
     <style name="Theme.YourApp" parent="android:Theme.Material.Light.NoActionBar">
         <!-- Customize your app's theme as needed -->
+        <item name="android:statusBarColor">@color/Light</item>
     </style>
 </resources>
