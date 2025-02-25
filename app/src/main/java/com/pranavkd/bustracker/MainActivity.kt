@@ -1,6 +1,7 @@
 package com.pranavkd.bustracker
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,10 +21,12 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -83,35 +86,58 @@ fun MainScreen() {
             LatLng(9.901145, 76.712371),
         ))
     }
+    LaunchedEffect(locat,cameraPositionState) {
+
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(WindowInsets.statusBars.only(WindowInsetsSides.Top).asPaddingValues())
     ) {
-        MapLayoutBox(
-            locat = locat,
-            rotation = rotation,
-            cameraPositionState = cameraPositionState,
-            routeCoordinates = routeCoordinates
-        )
-        StatusIndicator(onClick = {
-            showBottomSheet = !showBottomSheet
-        })
-        BottomSheet(showBottomSheet = showBottomSheet, onDismiss = { showBottomSheet = false }, onApplly = { s: String, s1: String ->
-            var lat = s.split(",")
-            locat = LatLng(lat[0].toDouble(),lat[1].toDouble())
-            Toast.makeText(context, "Location Updated Now generating Routes", Toast.LENGTH_SHORT).show()
-            // var newroutes list of <LatLng>
-            var newRoutes : List<LatLng> = listOf()
-            // s1 format "{lat1,lon1},{lat2,lon2},..."
-            var routes = s1.split("},{")
-            for (route in routes){
-                var latlon = route.replace("{","").replace("}","").split(",")
-                newRoutes += LatLng(latlon[0].toDouble(),latlon[1].toDouble())
+        Scaffold(
+            floatingActionButton = {
+                androidx.compose.material3.FloatingActionButton(
+                    onClick = {
+                        val oldPosition = cameraPositionState.position
+                        cameraPositionState.position = CameraPosition(
+                            locat,
+                            oldPosition.zoom,
+                            oldPosition.tilt,
+                            oldPosition.bearing
+                        )
+                    }
+                ) {
+                    androidx.compose.material3.Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.Add,
+                        contentDescription = "Add"
+                    )
+                }
             }
-            routeCoordinates = newRoutes
+        ) { paddingValues ->
+            Log.e("MainScreen", "Padding Values: $paddingValues")
+            MapLayoutBox(
+                locat = locat,
+                rotation = rotation,
+                cameraPositionState = cameraPositionState,
+                routeCoordinates = routeCoordinates
+            )
+            StatusIndicator(onClick = {
+                showBottomSheet = !showBottomSheet
+            })
+            BottomSheet(showBottomSheet = showBottomSheet, onDismiss = { showBottomSheet = false }, onApplly = { busId: String ->
+                Toast.makeText(context, "Bus Id: $busId", Toast.LENGTH_SHORT).show()
+                val managers = Managers()
+                managers.getTravelRoute(busId) {
+                    routeCoordinates = it
+                }
+                managers.sendBusLocationWs(busId, callback = {
+                    Log.d("MainActivity", "Bus Location: $it")
+                    locat = it
+                })
+            })
+        }
 
-        })
     }
 }
 
@@ -140,7 +166,7 @@ fun StatusIndicator(onClick:()->Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheet(showBottomSheet: Boolean, onDismiss: () -> Unit, onApplly: (text:String,routes:String) -> Unit ) {
+fun BottomSheet(showBottomSheet: Boolean, onDismiss: () -> Unit, onApplly: (busid:String) -> Unit ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
 
@@ -154,30 +180,21 @@ fun BottomSheet(showBottomSheet: Boolean, onDismiss: () -> Unit, onApplly: (text
             // Sheet content
             //TextFile For Bus Location
             var text by remember { mutableStateOf("") }
-            var routesText by remember { mutableStateOf("") }
             TextField(
                 value = text,
                 onValueChange = { text = it },
-                label = { Text("Enter Bus Location") },
+                label = { Text("Enter Bus ID") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
                     .padding(16.dp)
             )
-            TextField(
-                value = routesText,
-                onValueChange = { routesText = it },
-                label = { Text("Enter Bus Routes") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .padding(16.dp)
-            )
+
             //Aplly Button
             Button(
                 onClick = {
                     //
-                    onApplly(text,routesText)
+                    onApplly(text)
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
                         if (!sheetState.isVisible) {
                             onDismiss()
