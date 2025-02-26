@@ -57,6 +57,7 @@ import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.pranavkd.bustracker.ui.theme.BusTrackerTheme
 import kotlinx.coroutines.launch
+import android.location.Location
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,7 +87,7 @@ fun MainScreen() {
             LatLng(9.901145, 76.712371),
         ))
     }
-    LaunchedEffect(locat,cameraPositionState) {
+    LaunchedEffect(locat) {
 
     }
 
@@ -133,7 +134,9 @@ fun MainScreen() {
                 }
                 managers.sendBusLocationWs(busId, callback = {
                     Log.d("MainActivity", "Bus Location: $it")
-                    locat = it
+                    val newLocation = it
+                    rotation = calculateBearing(locat, newLocation)
+                    locat = newLocation
                 })
             })
         }
@@ -260,6 +263,18 @@ fun MapLayoutBox(
         }
 
     }
+}
+
+fun calculateBearing(startLatLng: LatLng, endLatLng: LatLng): Float {
+    val startLocation = Location("").apply {
+        latitude = startLatLng.latitude
+        longitude = startLatLng.longitude
+    }
+    val endLocation = Location("").apply {
+        latitude = endLatLng.latitude
+        longitude = endLatLng.longitude
+    }
+    return startLocation.bearingTo(endLocation)
 }
 
 @Preview(showBackground = true)
