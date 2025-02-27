@@ -13,15 +13,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -30,6 +26,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.pranavkd.bustracker.ChatLogic.ChatViewModel
 
 sealed class BootomNavItem(
     val route: String,
@@ -43,7 +40,7 @@ sealed class BootomNavItem(
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun NaveMain(){
+fun NaveMain(viewmodel: ChatViewModel) {
     val navController = rememberNavController()
     Scaffold (
         //
@@ -64,7 +61,7 @@ fun NaveMain(){
                 MainScreen(navController)
             }
             composable("ChatScren"){
-                ChatScren()
+                ChatScren(viewmodel)
             }
         }
     }
