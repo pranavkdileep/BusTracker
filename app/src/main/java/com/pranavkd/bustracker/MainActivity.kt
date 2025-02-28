@@ -1,5 +1,6 @@
 package com.pranavkd.bustracker
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,7 +18,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             BusTrackerTheme {
-                NaveMain(viewmodel)
+                val context = this
+                val sharedPreferences = context.getSharedPreferences("BusTracker", Context.MODE_PRIVATE)
+                NaveMain(viewmodel,sharedPreferences)
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.pranavkd.bustracker
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -40,7 +41,7 @@ sealed class BootomNavItem(
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun NaveMain(viewmodel: ChatViewModel) {
+fun NaveMain(viewmodel: ChatViewModel, sharedPreferences: SharedPreferences) {
     val navController = rememberNavController()
     Scaffold (
         //
@@ -58,10 +59,10 @@ fun NaveMain(viewmodel: ChatViewModel) {
             modifier = Modifier.padding(innerPadding)
         ){
             composable("TrackingScreen"){
-                MainScreen(navController)
+                MainScreen(navController,sharedPreferences)
             }
             composable("ChatScren"){
-                ChatScren(viewmodel)
+                ChatScren(viewmodel,sharedPreferences,navController)
             }
         }
     }

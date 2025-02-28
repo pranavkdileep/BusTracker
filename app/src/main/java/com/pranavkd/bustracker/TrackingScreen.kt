@@ -1,5 +1,6 @@
 package com.pranavkd.bustracker
 
+import android.content.Context
 import android.location.Location
 import android.util.Log
 import android.widget.Toast
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,9 +58,13 @@ import com.pranavkd.bustracker.ui.theme.BusTrackerTheme
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainScreen(navController: NavHostController?) {
-    var showBottomSheet by remember { mutableStateOf(true) }
+fun MainScreen(navController: NavHostController?,sharedPreferences :  android.content.SharedPreferences) {
     val context = LocalContext.current
+    var bookingId by remember { mutableStateOf(sharedPreferences.getString("bookingId", "") ?: "") }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    if(bookingId.isEmpty()) {
+        showBottomSheet = true
+    }
     var locat by remember { mutableStateOf(LatLng(10.517147, 76.212787)) }
     var rotation by remember { mutableStateOf(0f) }
     val cameraPositionState = rememberCameraPositionState {
@@ -70,8 +76,20 @@ fun MainScreen(navController: NavHostController?) {
             LatLng(9.901145, 76.712371),
         ))
     }
-    LaunchedEffect(locat) {
-
+    LaunchedEffect(bookingId) {
+        Log.d("MainScreen", "Booking Id: $bookingId")
+        sharedPreferences.edit().putString("bookingId", bookingId).apply()
+        Toast.makeText(context, "Bus Id: $bookingId", Toast.LENGTH_SHORT).show()
+        val managers = Managers()
+        managers.getTravelRoute(bookingId) {
+            routeCoordinates = it
+        }
+        managers.sendBusLocationWs(bookingId, callback = {
+            Log.d("MainActivity", "Bus Location: $it")
+            val newLocation = it
+            rotation = calculateBearing(locat, newLocation)
+            locat = newLocation
+        })
     }
 
     Box(
@@ -93,7 +111,7 @@ fun MainScreen(navController: NavHostController?) {
                     }
                 ) {
                     androidx.compose.material3.Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Add,
+                        imageVector = androidx.compose.material.icons.Icons.Default.LocationOn,
                         contentDescription = "Add"
                     )
                 }
@@ -107,21 +125,22 @@ fun MainScreen(navController: NavHostController?) {
                 routeCoordinates = routeCoordinates
             )
             StatusIndicator(onClick = {
-                navController?.navigate("ChatScren")
-                //showBottomSheet = !showBottomSheet
-            })
+                showBottomSheet = !showBottomSheet
+            }, bookingId = bookingId)
             BottomSheet(showBottomSheet = showBottomSheet, onDismiss = { showBottomSheet = false }, onApplly = { busId: String ->
-                Toast.makeText(context, "Bus Id: $busId", Toast.LENGTH_SHORT).show()
-                val managers = Managers()
-                managers.getTravelRoute(busId) {
-                    routeCoordinates = it
-                }
-                managers.sendBusLocationWs(busId, callback = {
-                    Log.d("MainActivity", "Bus Location: $it")
-                    val newLocation = it
-                    rotation = calculateBearing(locat, newLocation)
-                    locat = newLocation
-                })
+                bookingId = busId
+//                sharedPreferences.edit().putString("bookingId", bookingId).apply()
+//                Toast.makeText(context, "Bus Id: $bookingId", Toast.LENGTH_SHORT).show()
+//                val managers = Managers()
+//                managers.getTravelRoute(bookingId) {
+//                    routeCoordinates = it
+//                }
+//                managers.sendBusLocationWs(bookingId, callback = {
+//                    Log.d("MainActivity", "Bus Location: $it")
+//                    val newLocation = it
+//                    rotation = calculateBearing(locat, newLocation)
+//                    locat = newLocation
+//                })
             })
         }
 
@@ -129,7 +148,7 @@ fun MainScreen(navController: NavHostController?) {
 }
 
 @Composable
-fun StatusIndicator(onClick:()->Unit) {
+fun StatusIndicator(onClick:()->Unit, bookingId: String = "") {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -143,7 +162,7 @@ fun StatusIndicator(onClick:()->Unit) {
             onClick = {onClick()}
         ) {
             Text(
-                text = "Click to open bottom sheet",
+                text = "Enter New Bus ID, now Traking: $bookingId",
                 modifier = Modifier.padding(16.dp)
             )
 
@@ -264,6 +283,6 @@ fun calculateBearing(startLatLng: LatLng, endLatLng: LatLng): Float {
 @Composable
 fun GreetingPreview() {
     BusTrackerTheme {
-        MainScreen(null)
+        MainScreen(null, LocalContext.current.getSharedPreferences("BusTracker", Context.MODE_PRIVATE))
     }
 }

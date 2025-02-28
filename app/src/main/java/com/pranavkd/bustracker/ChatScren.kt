@@ -1,10 +1,14 @@
 package com.pranavkd.bustracker
 
+import android.content.SharedPreferences
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,32 +17,63 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.google.android.gms.maps.model.CameraPosition
 import com.pranavkd.bustracker.ChatLogic.ChatViewModel
 import com.pranavkd.bustracker.ChatLogic.Message
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScren(viewModel: ChatViewModel = viewModel()) {
+fun ChatScren(
+    viewModel: ChatViewModel = viewModel(),
+    sharedPreferences: SharedPreferences,
+    navController: NavHostController
+) {
+    var bookingId by remember { mutableStateOf(sharedPreferences.getString("bookingId", "")!!) }
+    if(bookingId == ""){
+        navController.navigate("TrackingScreen")
+    }
+    viewModel.receiveMessage(bookingId = bookingId)
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(text = "Chat With Conductor") })
+        },
+        floatingActionButton = {
+            androidx.compose.material3.FloatingActionButton(
+                onClick = {
+                    viewModel.clearMessages()
+                    viewModel.receiveMessage(bookingId = bookingId)
+                },
+                modifier = Modifier.padding(bottom = 60.dp)
+            ) {
+                androidx.compose.material3.Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Refresh,
+                    contentDescription = "Add"
+                )
+            }
         }
     ) { paddingValues ->
+        val listState = rememberLazyListState()
+
+        LaunchedEffect(viewModel.messageList.size) {
+            listState.animateScrollToItem(viewModel.messageList.size )
+        }
         Column(modifier = Modifier.padding(paddingValues)) {
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 //reverseLayout = true
+                state = listState
             ) {
                 items(viewModel.messageList) { message ->
-                    ChatMessageItem(message)
+                    ChatMessageItem(message,bookingId)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
             BottomSendView(
                 onSendMessage = { message ->
-                    viewModel.sendMessage(message)
+                    viewModel.sendMessage(message,bookingId)
                 }
             )
         }
@@ -46,7 +81,7 @@ fun ChatScren(viewModel: ChatViewModel = viewModel()) {
 }
 
 @Composable
-fun ChatMessageItem(message: Message) {
+fun ChatMessageItem(message: Message, bookingId: String) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = if (message.direction == "send")
@@ -58,6 +93,14 @@ fun ChatMessageItem(message: Message) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
+            )
+        }
+        else{
+            Text(
+                text = "You: $bookingId",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 16.dp, bottom = 4.dp, end = 16.dp)
             )
         }
 
