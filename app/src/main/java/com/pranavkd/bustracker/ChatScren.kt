@@ -41,7 +41,6 @@ fun ChatScren(
         floatingActionButton = {
             androidx.compose.material3.FloatingActionButton(
                 onClick = {
-                    viewModel.clearMessages()
                     viewModel.receiveMessage(bookingId = bookingId)
                 },
                 modifier = Modifier.padding(bottom = 60.dp)

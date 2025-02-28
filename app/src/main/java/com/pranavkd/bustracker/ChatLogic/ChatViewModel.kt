@@ -2,6 +2,7 @@ package com.pranavkd.bustracker.ChatLogic
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import okhttp3.Call
 import okhttp3.MediaType.Companion.toMediaType
@@ -24,23 +25,11 @@ class ChatViewModel : ViewModel() {
     fun sendMessage(text: String, bookingId: String) {
         val mediaType = "application/json; charset=utf-8".toMediaType()
 
-//        {
-//            "id": "chat1",
-//            "senderType": "user",
-//            "senderBookingId": "booking1",
-//            "receiverType": "user",
-//            "receiverConductorId": "conductor1",
-//            "messageText": "Hello, user1",
-//            "sentAt": "2025-02-26T10:00:00Z"
-//        }
         val body = JSONObject().apply{
-            put("id", "chat1")
             put("senderType", "user")
             put("senderBookingId", bookingId)
-            put("receiverType", "user")
-            put("receiverConductorId", "conductor1")
+            put("receiverType", "all")
             put("messageText", text)
-            put("sentAt", "2025-02-26T10:00:00Z")
         }.toString().toRequestBody(mediaType)
 
         val request = Request.Builder()
@@ -67,7 +56,7 @@ class ChatViewModel : ViewModel() {
             lock = false
             val mediaType = "application/json; charset=utf-8".toMediaType()
             val body = JSONObject().apply {
-                put("bookingId", bookingId)
+                put("bookId", bookingId)
             }.toString().toRequestBody(mediaType)
             val request = Request.Builder()
                 .url(apiUrl2)
@@ -102,19 +91,45 @@ class ChatViewModel : ViewModel() {
                         var res = response.body!!.string()
                         //Log.d("ChatViewModel", "Response: $res")
                         //clear the list
-                        _messageList.clear()
                         val resJson = JSONArray(res)
                         Log.d("ChatViewModel", "Response: $resJson")
-                        for(int in 0 until resJson.length()){
-                            val message = resJson.getJSONObject(int)
-                            _messageList.add(Message(message.getString("messageText"), message.getString("direction"), message.getString("sentAt")))
-                        }
+                        syncMessages(resJson,_messageList)
                     }
                 }
             })
             lock = true
         }
 
+    }
+
+    fun syncMessages(resJson: JSONArray, _messageList: SnapshotStateList<Message>) {
+        val _messageListlen = _messageList.size
+        val resJsonlen = resJson.length()
+        if(_messageListlen == 0){
+            for (i in 0 until resJsonlen) {
+                val message = resJson.getJSONObject(i)
+                _messageList.add(
+                    Message(
+                        id = i.toString(),
+                        messageText = message.getString("messageText"),
+                        direction = message.getString("direction"),
+                        time = message.getString("sentAt")
+                    )
+                )
+            }
+            }else{
+                for (i in _messageListlen until resJsonlen) {
+                    val message = resJson.getJSONObject(i)
+                    _messageList.add(
+                        Message(
+                            id = i.toString(),
+                            messageText = message.getString("messageText"),
+                            direction = message.getString("direction"),
+                            time = message.getString("sentAt")
+                        )
+                    )
+                }
+            }
     }
 
     fun clearMessages(){
