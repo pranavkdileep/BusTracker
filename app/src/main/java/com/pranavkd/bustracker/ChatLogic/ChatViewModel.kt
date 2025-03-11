@@ -19,17 +19,19 @@ class ChatViewModel : ViewModel() {
     private val client = OkHttpClient()
     private val _messageList = mutableStateListOf<Message>()
     val messageList: List<Message> get() = _messageList
-    val apiUrl = "http://207.211.188.157:4578/api/admin/chat"
-    val apiUrl2 = "http://207.211.188.157:4578/api/admin/getChat"
+//    val apiUrl = "http://207.211.188.157:4578/api/admin/chat"
+//    val apiUrl2 = "http://207.211.188.157:4578/api/admin/getChat"
+    val apiUrl = "https://bus-tracker-backend-one.vercel.app/api/admin/chat"
+    val apiUrl2 = "https://bus-tracker-backend-one.vercel.app/api/admin/getChat"
 
     fun sendMessage(text: String, bookingId: String) {
         val mediaType = "application/json; charset=utf-8".toMediaType()
 
         val body = JSONObject().apply{
-            put("senderType", "user")
-            put("senderBookingId", bookingId)
-            put("receiverType", "all")
-            put("messageText", text)
+            put("sendertype", "user")
+            put("senderbookingid", bookingId)
+            put("receivertype", "all")
+            put("messagetext", text)
         }.toString().toRequestBody(mediaType)
 
         val request = Request.Builder()

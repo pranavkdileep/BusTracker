@@ -80,16 +80,16 @@ fun MainScreen(navController: NavHostController?,sharedPreferences :  android.co
         Log.d("MainScreen", "Booking Id: $bookingId")
         sharedPreferences.edit().putString("bookingId", bookingId).apply()
         Toast.makeText(context, "Bus Id: $bookingId", Toast.LENGTH_SHORT).show()
-//        val managers = Managers()
-//        managers.getTravelRoute(bookingId) {
-//            routeCoordinates = it
-//        }
-//        managers.sendBusLocationWs(bookingId, callback = {
-//            Log.d("MainActivity", "Bus Location: $it")
-//            val newLocation = it
-//            rotation = calculateBearing(locat, newLocation)
-//            locat = newLocation
-//        })
+        val managers = Managers()
+        managers.getTravelRoute("123") {
+            routeCoordinates = it
+        }
+        managers.sendBusLocationWs(bookingId, callback = {
+            Log.d("MainActivity", "Bus Location: $it")
+            val newLocation = it
+            rotation = calculateBearing(locat, newLocation)
+            locat = newLocation
+        })
     }
 
     Box(
