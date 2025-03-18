@@ -19,11 +19,14 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -126,23 +129,9 @@ fun MainScreen(navController: NavHostController?,sharedPreferences :  android.co
                 routeCoordinates = routeCoordinates
             )
             StatusIndicator(onClick = {
-                showBottomSheet = !showBottomSheet
+                navController?.navigate("Home")
             }, bookingId = bookingId)
-            BottomSheet(showBottomSheet = showBottomSheet, onDismiss = { showBottomSheet = false }, onApplly = { busId: String ->
-                bookingId = busId
-//                sharedPreferences.edit().putString("bookingId", bookingId).apply()
-//                Toast.makeText(context, "Bus Id: $bookingId", Toast.LENGTH_SHORT).show()
-//                val managers = Managers()
-//                managers.getTravelRoute(bookingId) {
-//                    routeCoordinates = it
-//                }
-//                managers.sendBusLocationWs(bookingId, callback = {
-//                    Log.d("MainActivity", "Bus Location: $it")
-//                    val newLocation = it
-//                    rotation = calculateBearing(locat, newLocation)
-//                    locat = newLocation
-//                })
-            })
+
         }
 
     }
@@ -168,56 +157,22 @@ fun StatusIndicator(onClick:()->Unit, bookingId: String = "") {
             )
 
         }
-    }
-}
+        Button(
+            onClick = {onClick(
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BottomSheet(showBottomSheet: Boolean, onDismiss: () -> Unit, onApplly: (busid:String) -> Unit ) {
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
-
-    if (showBottomSheet) {
-        ModalBottomSheet(
+            )},
             modifier = Modifier
-                .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
-            onDismissRequest = onDismiss,
-            sheetState = sheetState
+                .padding(8.dp)
         ) {
-            // Sheet content
-            //TextFile For Bus Location
-            var text by remember { mutableStateOf("") }
-            TextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text("Enter Bus ID") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .padding(16.dp)
+            Icon(
+                imageVector = Icons.Rounded.Home,
+                contentDescription = "Add"
             )
-
-            //Aplly Button
-            Button(
-                onClick = {
-                    //
-                    onApplly(text)
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            onDismiss()
-                        }
-                    }
-                }
-                ,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text("Apply Config")
-            }
         }
     }
 }
+
+
 
 @Composable
 fun MapLayoutBox(

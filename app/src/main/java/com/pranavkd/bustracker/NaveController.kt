@@ -50,14 +50,21 @@ fun NaveMain(viewmodel: ChatViewModel, sharedPreferences: SharedPreferences) {
                 WindowInsets.systemBars.only(WindowInsetsSides.Bottom)
             ),
         bottomBar = {
-            BootomNav(navController)
+            val backStackEntry = navController.currentBackStackEntryAsState()
+            val currentRoute = backStackEntry.value?.destination?.route
+            if(currentRoute != "Home"){
+                BootomNav(navController)
+            }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "TrackingScreen",
+            startDestination = "Home",
             modifier = Modifier.padding(innerPadding)
         ){
+            composable("Home"){
+                Home(navController,sharedPreferences)
+            }
             composable("TrackingScreen"){
                 MainScreen(navController,sharedPreferences)
             }
