@@ -19,10 +19,10 @@ class Managers {
     fun getTravelRoute(busId:String, callback: (List<LatLng>)->Unit) {
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val body = JSONObject().apply {
-            put("busId", busId)
+            put("bookingId", busId)
         }.toString().toRequestBody(mediaType)
         val request = Request.Builder()
-            .url("http://207.211.188.157:4578/api/getBusRoutes")
+            .url("https://bus-tracker-backend-one.vercel.app/api/client/getBusRoutes")
             .post(body)
             .build()
         client.newCall(request).enqueue(object : okhttp3.Callback {
@@ -34,9 +34,9 @@ class Managers {
                 response.use {
                     if(!response.isSuccessful) throw IOException("Unexpected code $response")
                     val res = response.body!!.string()
-                    Log.d("Managers", "Response: $res")
+                    Log.d("Managers", "Response: ${res.replace("\"", "").replace("\n", "")}")
                     //[{10.3012,76.3334},{10.3013,76.3335},{10.3015,76.3336}]
-                    var routesArray = res.split("},{")
+                    var routesArray = res.replace("\"", "").replace("\\n", "").split("},{")
                     var routes : List<LatLng> = listOf()
                     for(route in routesArray){
                         val latlng = route.replace("[{","").replace("}]","").replace("{","").replace("}","").split(",")

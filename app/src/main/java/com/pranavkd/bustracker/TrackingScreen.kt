@@ -81,8 +81,9 @@ fun MainScreen(navController: NavHostController?,sharedPreferences :  android.co
         sharedPreferences.edit().putString("bookingId", bookingId).apply()
         Toast.makeText(context, "Bus Id: $bookingId", Toast.LENGTH_SHORT).show()
         val managers = Managers()
-        managers.getTravelRoute("123") {
+        managers.getTravelRoute(bookingId) {
             routeCoordinates = it
+            Log.d("Managers", "Response: $it")
         }
         managers.sendBusLocationWs(bookingId, callback = {
             Log.d("MainActivity", "Bus Location: $it")
