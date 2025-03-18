@@ -1,41 +1,21 @@
 package com.pranavkd.bustracker
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,12 +27,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private var navControllerr : NavHostController? = null;
+private var navControllerr: NavHostController? = null
 
 @Composable
 fun Home(navController: NavHostController, sharedPreferences: SharedPreferences) {
-    navControllerr = navController;
-    MaterialTheme {
+    navControllerr = navController
+    MaterialTheme(
+        colorScheme = lightColorScheme(
+            primary = Color(0xFF1976D2),
+            secondary = Color(0xFF42A5F5),
+            background = Color(0xFFF5F7FA)
+        )
+    ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
@@ -67,130 +53,218 @@ fun Home(navController: NavHostController, sharedPreferences: SharedPreferences)
 fun BookingLayout(sharedPreferences: SharedPreferences) {
     var bookingId by remember { mutableStateOf(sharedPreferences.getString("bookingId", null)) }
     var textFieldValue by remember { mutableStateOf("") }
-    var loading by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(true) }
+    var bdata by remember { mutableStateOf(BookingHome(
+        bookingId = "",
+        fullname = "",
+        email = "",
+        phone = "",
+        gender = "",
+        busId = "",
+        source = "",
+        destination = "",
+        conductor = "",
+        timeD = "",
+        timeA = "",
+        status = "",
+        routes = listOf()
+    )) }
+    val manager = Managers()
+    if (bookingId != null) {
+        manager.getBookingDetails(bookingId!!, onComplete = {
+            bdata = it
+            loading = false
+        }, onFailure = {
+            Log.e("Managers", "Failed to get booking details", it)
+        })
+    }
 
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         if (bookingId == null) {
-            // Show text field and submit button
-            Text(text = "Enter Booking ID:")
-            Spacer(modifier = Modifier.height(8.dp))
-            TextField(
-                value = textFieldValue,
-                onValueChange = { textFieldValue = it },
-                modifier = Modifier.fillMaxWidth()
+            Text(
+                text = "Bus Tracker",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    // Save booking ID to shared preferences
-                    sharedPreferences.edit().putString("bookingId", textFieldValue).apply()
-                    bookingId = textFieldValue
-                    loading = true
-                    //wait for 2 seconds
-                    CoroutineScope(Dispatchers.Main).launch {
-                        delay(2000)
-                        loading = false
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
+
+            Card(
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Submit")
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = textFieldValue,
+                        onValueChange = { textFieldValue = it },
+                        label = { Text("Enter Booking ID") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+
+                    Button(
+                        onClick = {
+                            sharedPreferences.edit().putString("bookingId", textFieldValue).apply()
+                            bookingId = textFieldValue
+                            loading = true
+                            CoroutineScope(Dispatchers.Main).launch {
+                                delay(2000)
+                                loading = false
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(
+                            "Track Bus",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
             }
         } else {
-            // Show bus details
-            if(!loading){
-                val sampleBooking = BookingHome(
-                    bookingId = "BID123",
-                    fullname = "John Smith",
-                    email = "john.smith@example.com",
-                    phone = "1234567890",
-                    gender = "Male",
-                    busId = "BUS459",
-                    source = "City A",
-                    destination = "City B",
-                    conductor = "Alice Doe",
-                    timeD = "10:00 AM",
-                    timeA = "2:00 PM",
-                    status = "On Time",
-                    routes = listOf(
-                        Routes(name = "Stop 1", completed = true),
-                        Routes(name = "Stop 2", completed = true),
-                        Routes(name = "Stop 3", completed = true),
-                        Routes(name = "Stop 4", completed = true),
-                        Routes(name = "Stop 5", completed = false),
-                        Routes(name = "Stop 6", completed = false),
-                        Routes(name = "Stop 7", completed = false),
-                    )
-                )
-                BusDetails(bookingIdData = sampleBooking,onClick = {
-                    sharedPreferences.edit().remove("bookingId").apply()
-                    bookingId = null
-                })
-            }else{
-                Text("Loading...")
+            if (loading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+            } else {
+                    BusDetails(bookingIdData = bdata) {
+                        sharedPreferences.edit().remove("bookingId").apply()
+                        bookingId = null
+                    }
             }
         }
     }
 }
 
-// In `Home.kt`
 @Composable
 fun BusDetails(bookingIdData: BookingHome, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Booking ID: ${bookingIdData.bookingId}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text("Passenger: ${bookingIdData.fullname}")
-            Text("Email: ${bookingIdData.email}")
-            Text("Phone: ${bookingIdData.phone}")
-            Text("Gender: ${bookingIdData.gender}")
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = { onClick() },
-                modifier = Modifier.fillMaxWidth()
+        item {
+            Card(
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
             ) {
-                Text("Change Booking ID")
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Header
+                    Text(
+                        text = "Trip Details : ${bookingIdData.bookingId}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    // Passenger Info Card
+                    InfoCard(
+                        title = "Passenger Info",
+                        content = {
+                            DetailRow("Name", bookingIdData.fullname)
+                            DetailRow("Email", bookingIdData.email)
+                            DetailRow("Phone", bookingIdData.phone)
+                            DetailRow("Gender", bookingIdData.gender)
+                        }
+                    )
+
+                    // Trip Info Card
+                    InfoCard(
+                        title = "Trip Info",
+                        content = {
+                            DetailRow("Bus ID", bookingIdData.busId)
+                            DetailRow("From", bookingIdData.source)
+                            DetailRow("To", bookingIdData.destination)
+                            DetailRow("Conductor", bookingIdData.conductor)
+                            DetailRow("Departure", bookingIdData.timeD)
+                            DetailRow("Arrival", bookingIdData.timeA)
+                            DetailRow(
+                                "Status",
+                                bookingIdData.status,
+                                valueColor = if (bookingIdData.status == "On Time") Color(0xFF2ECC71) else Color.Red
+                            )
+                        }
+                    )
+
+                    TrackButton { navControllerr?.navigate("TrackingScreen") }
+
+                    Button(
+                        onClick = onClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Change Booking", color = Color.White)
+                    }
+                }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-
-            DetailRow(label = "Bus ID", value = bookingIdData.busId)
-            DetailRow(label = "Source", value = bookingIdData.source)
-            DetailRow(label = "Destination", value = bookingIdData.destination)
-            DetailRow(label = "Conductor", value = bookingIdData.conductor)
-            DetailRow(label = "Departure Time", value = bookingIdData.timeD)
-            DetailRow(label = "Arrival Time", value = bookingIdData.timeA)
-            DetailRow(label = "Status", value = bookingIdData.status)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Routes:",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            TrackButton(onClick = { navControllerr?.navigate("TrackingScreen") })
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LazyColumn {
-                items(bookingIdData.routes) { route ->
-                    RouteItem(route)
+            Card(
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Route Progress",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    bookingIdData.routes.forEach { route ->
+                        RouteItem(route)
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun InfoCard(title: String, content: @Composable () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        content()
     }
 }
 
@@ -199,70 +273,61 @@ fun RouteItem(route: Routes) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = Icons.Filled.LocationOn,
             contentDescription = "Route Stop",
-            tint = MaterialTheme.colorScheme.primary
+            tint = if (route.completed) Color(0xFF2ECC71) else MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
         )
-        Spacer(modifier = Modifier.padding(4.dp))
-        Text(text = route.name, fontSize = 16.sp)
-        if (route.completed) {
-            Text(" \u2013 Completed", color = Color.Green)
-        } else {
-            Text(" \u2013 Ongoing", color = Color.Red)
-        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = route.name,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = if (route.completed) FontWeight.Normal else FontWeight.Medium
+        )
     }
 }
 
-
 @Composable
-fun DetailRow(label: String, value: String) {
+fun DetailRow(label: String, value: String, valueColor: Color = MaterialTheme.colorScheme.onSurface) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-        Text(text = value, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = "$label:",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = valueColor,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
-
 @Composable
-fun TrackButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun TrackButton(onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .height(56.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent
-        ),
-        contentPadding = PaddingValues(16.dp)
+            containerColor = MaterialTheme.colorScheme.primary
+        )
     ) {
         Text(
-            text = "Track",
-            style = TextStyle(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            ),
-            modifier = Modifier
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.secondary
-                        )
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(horizontal = 24.dp, vertical = 8.dp)
+            text = "Live Tracking",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White
         )
     }
 }

@@ -2,6 +2,8 @@ package com.pranavkd.bustracker
 
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
+import com.pranavkd.bustracker.Types.BookingHome
+import com.pranavkd.bustracker.Types.Routes
 import okhttp3.Call
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -82,5 +84,63 @@ class Managers {
 
         client.newWebSocket(request, listener)
         client.dispatcher.executorService.shutdown()
+    }
+    fun getBookingDetails(
+        bookingId:String,
+        onComplete : (BookingData:BookingHome) -> Unit,
+        onFailure : (e:Exception) -> Unit
+
+    ){
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val body = JSONObject().apply {
+            put("bookingId", bookingId)
+        }.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .url("https://bus-tracker-backend-one.vercel.app/api/client/getBookingDetails")
+            .post(body)
+            .build()
+        try {
+            client.newCall(request).enqueue(object : okhttp3.Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    onFailure(e)
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    response.use {
+                        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                        val res = response.body!!.string()
+                        Log.d("Managers", "Response: $res")
+                        val json = JSONObject(res)
+                        val routesJson = json.getJSONArray("routes")
+                        val routesList = mutableListOf<Routes>()
+                        for (i in 0 until routesJson.length()) {
+                            val routeObj = routesJson.getJSONObject(i)
+                            val routeName = routeObj.getString("name")
+                            val routeCompleted = routeObj.getBoolean("completed")
+                            routesList.add(Routes(routeName, routeCompleted))
+                        }
+
+                        val booking = BookingHome(
+                            json.getString("bookingId"),
+                            json.getString("fullname"),
+                            json.getString("email"),
+                            json.getString("phone"),
+                            json.getString("gender"),
+                            json.getString("busId"),
+                            json.getString("source"),
+                            json.getString("destination"),
+                            json.getString("conductor"),
+                            json.getString("timeD"),
+                            json.getString("timeA"),
+                            json.getString("status"),
+                            routesList
+                        )
+                        onComplete(booking)
+                    }
+                }
+            });
+        }catch (e:Exception){
+            onFailure(e)
+        }
     }
 }
