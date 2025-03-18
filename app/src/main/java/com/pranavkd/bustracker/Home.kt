@@ -40,6 +40,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.pranavkd.bustracker.Types.BookingHome
+import com.pranavkd.bustracker.Types.Routes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -97,7 +99,30 @@ fun BookingLayout(sharedPreferences: SharedPreferences) {
         } else {
             // Show bus details
             if(!loading){
-                BusDetails(bookingId = bookingId!!,onClick = {
+                val sampleBooking = BookingHome(
+                    bookingId = "BID123",
+                    fullname = "John Smith",
+                    email = "john.smith@example.com",
+                    phone = "1234567890",
+                    gender = "Male",
+                    busId = "BUS459",
+                    source = "City A",
+                    destination = "City B",
+                    conductor = "Alice Doe",
+                    timeD = "10:00 AM",
+                    timeA = "2:00 PM",
+                    status = "On Time",
+                    routes = listOf(
+                        Routes(name = "Stop 1", completed = true),
+                        Routes(name = "Stop 2", completed = true),
+                        Routes(name = "Stop 3", completed = true),
+                        Routes(name = "Stop 4", completed = true),
+                        Routes(name = "Stop 5", completed = false),
+                        Routes(name = "Stop 6", completed = false),
+                        Routes(name = "Stop 7", completed = false),
+                    )
+                )
+                BusDetails(bookingIdData = sampleBooking,onClick = {
                     sharedPreferences.edit().remove("bookingId").apply()
                     bookingId = null
                 })
@@ -108,17 +133,9 @@ fun BookingLayout(sharedPreferences: SharedPreferences) {
     }
 }
 
+// In `Home.kt`
 @Composable
-fun BusDetails(bookingId: String,onClick: () -> Unit) {
-    // In a real app, you would fetch bus details based on the booking ID
-    // For this example, we'll use hardcoded data
-    val busId = "BUS123"
-    val source = "City A"
-    val destination = "City B"
-    val conductor = "John Doe"
-    val time = "10:00 AM"
-    val routes = listOf("Stop 1", "Stop 2", "Stop 3")
-
+fun BusDetails(bookingIdData: BookingHome, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -132,51 +149,30 @@ fun BusDetails(bookingId: String,onClick: () -> Unit) {
                 .padding(16.dp)
         ) {
             Text(
-                text = "Booking ID: $bookingId",
+                text = "Booking ID: ${bookingIdData.bookingId}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
+            Text("Passenger: ${bookingIdData.fullname}")
+            Text("Email: ${bookingIdData.email}")
+            Text("Phone: ${bookingIdData.phone}")
+            Text("Gender: ${bookingIdData.gender}")
+            Spacer(modifier = Modifier.height(8.dp))
             Button(
-                onClick = {
-                    onClick()
-                },
+                onClick = { onClick() },
                 modifier = Modifier.fillMaxWidth()
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.secondary
-                            )
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
             ) {
-                Text("Change Booking ID",
-                    style = TextStyle(
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    ),
-                    modifier = Modifier
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.secondary
-                                )
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .padding(horizontal = 24.dp, vertical = 8.dp)
-                )
+                Text("Change Booking ID")
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            DetailRow(label = "Bus ID", value = busId)
-            DetailRow(label = "Source", value = source)
-            DetailRow(label = "Destination", value = destination)
-            DetailRow(label = "Conductor", value = conductor)
-            DetailRow(label = "Time", value = time)
+            DetailRow(label = "Bus ID", value = bookingIdData.busId)
+            DetailRow(label = "Source", value = bookingIdData.source)
+            DetailRow(label = "Destination", value = bookingIdData.destination)
+            DetailRow(label = "Conductor", value = bookingIdData.conductor)
+            DetailRow(label = "Departure Time", value = bookingIdData.timeD)
+            DetailRow(label = "Arrival Time", value = bookingIdData.timeA)
+            DetailRow(label = "Status", value = bookingIdData.status)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -186,19 +182,41 @@ fun BusDetails(bookingId: String,onClick: () -> Unit) {
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(16.dp))
-            TrackButton(onClick = {
-                navControllerr?.navigate("TrackingScreen")
-            })
+            TrackButton(onClick = { navControllerr?.navigate("TrackingScreen") })
             Spacer(modifier = Modifier.height(8.dp))
 
             LazyColumn {
-                items(routes) { route ->
-                    RouteItem(route = route)
+                items(bookingIdData.routes) { route ->
+                    RouteItem(route)
                 }
             }
         }
     }
 }
+
+@Composable
+fun RouteItem(route: Routes) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.LocationOn,
+            contentDescription = "Route Stop",
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
+        Text(text = route.name, fontSize = 16.sp)
+        if (route.completed) {
+            Text(" \u2013 Completed", color = Color.Green)
+        } else {
+            Text(" \u2013 Ongoing", color = Color.Red)
+        }
+    }
+}
+
 
 @Composable
 fun DetailRow(label: String, value: String) {
@@ -213,23 +231,6 @@ fun DetailRow(label: String, value: String) {
     }
 }
 
-@Composable
-fun RouteItem(route: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Filled.LocationOn,
-            contentDescription = "Route Stop",
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.padding(4.dp))
-        Text(text = route, fontSize = 16.sp)
-    }
-}
 
 @Composable
 fun TrackButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
