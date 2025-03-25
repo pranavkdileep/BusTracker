@@ -56,7 +56,7 @@ class Managers {
     fun sendBusLocationWs(busId: String,callback: (lotlog:LatLng) -> Unit) {
         //websoket ws://207.211.188.157:4578/busLocation
         val request = Request.Builder()
-            .url("ws://207.211.188.157:4578/busLocation?busId=$busId")
+            .url("ws://207.211.188.157:4578/busLocation?bookId=$busId")
             .build()
         val listener = object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
